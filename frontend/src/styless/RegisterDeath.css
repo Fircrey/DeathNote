@@ -1,0 +1,91 @@
+.death-form {
+  max-width: 700px;
+  margin: 100px 0 -200px -200px;
+  background: none; /* ✅ eliminamos cualquier fondo que tape */
+}
+
+/* Agrupación de campos */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-bottom: 40px;
+  background: none; /* ✅ nada de fondos */
+}
+
+/* Etiquetas */
+.form-group label {
+  font-family: 'Ancient Medium', serif;
+  font-size: 3.1rem;
+  font-weight: bold;
+  margin-bottom: 6px;
+  padding-left: 2px;
+  background: none;
+}
+
+/* Campos */
+.form-group input[type="text"],
+.form-group textarea {
+  font-family: 'Ancient Medium', serif;
+  font-size: 2.2rem;
+  background-color: transparent;
+  color: white;
+  border: none;
+  border-bottom: 1px solid white;
+  outline: none;
+  padding: 10px;
+  width: 100%;
+  margin-bottom: 30px;
+}
+
+/* Textarea */
+.form-group textarea {
+  height: 100px;
+  resize: vertical;
+}
+
+/* Sección de foto */
+.photo-section {
+  margin-top: 60px;
+  text-align: center;
+  background: none;
+}
+
+.photo-section label {
+  font-family: 'Ancient Medium', serif;
+  font-size: 2rem;
+  margin-bottom: 50px;
+  display: block;
+}
+
+.photo-section input[type="file"] {
+  margin-top: 10px;
+  background: none;
+}
+
+/* Botón */
+.death-form button {
+  display: block;
+  margin: 60px auto 0;
+  padding: 12px 24px;
+  font-size: 1.4rem;
+  background-color: #7025257a;
+  color: white;
+  border: none;
+  border-radius: 61px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  font-family: 'Ancient Medium', serif;
+}
+
+.death-form button:hover {
+  background-color: #c40000;
+}
+
+/* Placeholder */
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+  font-family: 'Ancient Medium', serif;
+  color: #ccc;
+  opacity: 0.7;
+}
