@@ -66,7 +66,7 @@ func (s *Server) initDB() {
 		}
 		s.DB = db
 	case "postgres":
-		dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=disable",
+		dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=require",
 			os.Getenv("POSTGRES_HOST"),
 			os.Getenv("POSTGRES_USER"),
 			os.Getenv("POSTGRES_PASSWORD"),
