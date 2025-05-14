@@ -9,30 +9,29 @@ interface PersonResponse {
 
 export function RegisterDeath() {
   const [fullName, setFullName] = useState("");
-  const [cause, setCause] = useState("");
-  const [details, setDetails] = useState("");
+  const [description, setDescription] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const createPerson = async (fullName: string, imageUrl: string): Promise<number> => {
-    const [firstName, ...lastParts] = fullName.split(" ");
+    const [firstName, ...lastParts] = fullName.trim().split(" ");
     const lastName = lastParts.join(" ");
 
-    if (!firstName || !lastName || !imageUrl) {
+    if (!firstName || !lastName || !imageUrl.trim()) {
       throw new Error("Nombre completo y URL de imagen son requeridos");
     }
 
     const response = await fetch("http://localhost:8000/people", {
       method: "POST",
-      headers: { 
+      headers: {
         "Content-Type": "application/json",
-        "Accept": "application/json"
+        "Accept": "application/json",
       },
       body: JSON.stringify({
         first_name: firstName,
         last_name: lastName,
-        image_url: imageUrl
+        image_url: imageUrl,
       }),
     });
 
@@ -45,18 +44,14 @@ export function RegisterDeath() {
     return data.id;
   };
 
-  const killPerson = async (personId: number, cause: string, details: string): Promise<void> => {
+  const killPerson = async (personId: number, description: string): Promise<void> => {
     const response = await fetch(`http://localhost:8000/kills/${personId}`, {
       method: "POST",
-      headers: { 
+      headers: {
         "Content-Type": "application/json",
-        "Accept": "application/json"
+        "Accept": "application/json",
       },
-      body: JSON.stringify({ 
-        cause_of_death: cause,
-        death_details: details,
-        death_time: new Date().toISOString()
-      }),
+      body: JSON.stringify({ description }),
     });
 
     if (!response.ok) {
@@ -76,14 +71,13 @@ export function RegisterDeath() {
       }
 
       const personId = await createPerson(fullName, imageUrl);
-      await killPerson(personId, cause, details);
+      await killPerson(personId, description.trim());
 
       alert("Persona registrada y muerte registrada con éxito");
-      
-      // Reset form
+
+      // Resetear formulario
       setFullName("");
-      setCause("");
-      setDetails("");
+      setDescription("");
       setImageUrl("");
     } catch (err) {
       const message = err instanceof Error ? err.message : "Error desconocido";
@@ -97,7 +91,7 @@ export function RegisterDeath() {
   return (
     <form className="death-form" onSubmit={handleSubmit}>
       <h2>Registrar Muerte</h2>
-      
+
       {error && <div className="error-message">{error}</div>}
 
       <div className="form-group">
@@ -113,22 +107,11 @@ export function RegisterDeath() {
       </div>
 
       <div className="form-group">
-        <label>Causa de muerte</label>
-        <input
-          type="text"
-          value={cause}
-          onChange={(e) => setCause(e.target.value)}
-          placeholder="Ej: Accidente"
-          disabled={isSubmitting}
-        />
-      </div>
-
-      <div className="form-group">
-        <label>Detalles específicos</label>
+        <label>Descripción de la muerte</label>
         <textarea
-          value={details}
-          onChange={(e) => setDetails(e.target.value)}
-          placeholder="Ej: Mientras veía YouTube a las 8 de la noche"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="Ej: Murió mientras comía papas frente al televisor"
           disabled={isSubmitting}
         />
       </div>
@@ -145,10 +128,7 @@ export function RegisterDeath() {
         />
       </div>
 
-      <button 
-        type="submit" 
-        disabled={isSubmitting}
-      >
+      <button type="submit" disabled={isSubmitting}>
         {isSubmitting ? "Procesando..." : "Registrar en la Death Note"}
       </button>
     </form>
