@@ -1,25 +1,105 @@
 import { useState } from "react";
 import "../styless/RegisterDeath.css";
 
+interface PersonResponse {
+  id: number;
+  full_name: string;
+  image_url: string;
+}
+
 export function RegisterDeath() {
   const [fullName, setFullName] = useState("");
   const [cause, setCause] = useState("");
   const [details, setDetails] = useState("");
-  const [image, setImage] = useState<File | null>(null);
+  const [imageUrl, setImageUrl] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!fullName || !image) {
-      alert("Nombre completo y foto son obligatorios.");
-      return;
+  const createPerson = async (fullName: string, imageUrl: string): Promise<number> => {
+    const [firstName, ...lastParts] = fullName.split(" ");
+    const lastName = lastParts.join(" ");
+
+    if (!firstName || !lastName || !imageUrl) {
+      throw new Error("Nombre completo y URL de imagen son requeridos");
     }
 
-    // Aquí podrías enviar la info al backend
-    console.log({ fullName, cause, details, image });
+    const response = await fetch("http://localhost:8000/people", {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
+      body: JSON.stringify({
+        first_name: firstName,
+        last_name: lastName,
+        image_url: imageUrl
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Error al crear la persona");
+    }
+
+    const data: PersonResponse = await response.json();
+    return data.id;
+  };
+
+  const killPerson = async (personId: number, cause: string, details: string): Promise<void> => {
+    const response = await fetch(`http://localhost:8000/kills/${personId}`, {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
+      body: JSON.stringify({ 
+        cause_of_death: cause,
+        death_details: details,
+        death_time: new Date().toISOString()
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Error al registrar la muerte");
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setIsSubmitting(true);
+
+    try {
+      if (!fullName.trim() || !imageUrl.trim()) {
+        throw new Error("El nombre completo y la URL de imagen son obligatorios");
+      }
+
+      const personId = await createPerson(fullName, imageUrl);
+      await killPerson(personId, cause, details);
+
+      alert("Persona registrada y muerte registrada con éxito");
+      
+      // Reset form
+      setFullName("");
+      setCause("");
+      setDetails("");
+      setImageUrl("");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Error desconocido";
+      setError(message);
+      console.error("Error en handleSubmit:", err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <form className="death-form" onSubmit={handleSubmit}>
+      <h2>Registrar Muerte</h2>
+      
+      {error && <div className="error-message">{error}</div>}
+
       <div className="form-group">
         <label>Nombre completo</label>
         <input
@@ -28,6 +108,7 @@ export function RegisterDeath() {
           onChange={(e) => setFullName(e.target.value)}
           required
           placeholder="Ej: Light Yagami"
+          disabled={isSubmitting}
         />
       </div>
 
@@ -38,6 +119,7 @@ export function RegisterDeath() {
           value={cause}
           onChange={(e) => setCause(e.target.value)}
           placeholder="Ej: Accidente"
+          disabled={isSubmitting}
         />
       </div>
 
@@ -46,20 +128,29 @@ export function RegisterDeath() {
         <textarea
           value={details}
           onChange={(e) => setDetails(e.target.value)}
-          placeholder="Ej: Mientras veía Youtube a las 8 de la noche"
+          placeholder="Ej: Mientras veía YouTube a las 8 de la noche"
+          disabled={isSubmitting}
         />
       </div>
 
-      <div className="photo-section">
-        <label>Foto del rostro</label>
+      <div className="form-group">
+        <label>URL de la imagen del rostro</label>
         <input
-          type="file"
-          accept="image/*"
-          onChange={(e) => setImage(e.target.files?.[0] || null)}
+          type="url"
+          value={imageUrl}
+          onChange={(e) => setImageUrl(e.target.value)}
+          placeholder="https://tuservidor.com/imagen.jpg"
+          required
+          disabled={isSubmitting}
         />
       </div>
 
-      <button type="submit">Registrar en la Death Note</button>
+      <button 
+        type="submit" 
+        disabled={isSubmitting}
+      >
+        {isSubmitting ? "Procesando..." : "Registrar en la Death Note"}
+      </button>
     </form>
   );
 }
