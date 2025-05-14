@@ -16,10 +16,10 @@ func (s *Server) HandlePeople(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 		s.handleGetAllPeople(w, r)
-		return
 	case http.MethodPost:
 		s.handleCreatePerson(w, r)
-		return
+	default:
+		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
 }
 
@@ -27,13 +27,12 @@ func (s *Server) HandlePeopleWithId(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 		s.handleGetPersonById(w, r)
-		return
 	case http.MethodPut:
 		s.handleEditPerson(w, r)
-		return
 	case http.MethodDelete:
 		s.handleDeletePerson(w, r)
-		return
+	default:
+		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
 }
 
@@ -46,22 +45,7 @@ func (s *Server) handleGetAllPeople(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	for _, v := range people {
-		alive := false
-		kill, err := s.KillRepository.FindById(int(v.ID))
-		if kill == nil && err == nil {
-			alive = true
-		}
-		dto := &api.PersonResponseDto{
-			ID:            int(v.ID),
-			Nombre:        v.Name,
-			Edad:          v.Age,
-			FechaCreacion: v.CreatedAt.String(),
-		}
-		if alive {
-			dto.Estado = "Vivo"
-		} else {
-			dto.Estado = "Muerto"
-		}
+		dto := v.ToPersonResponseDto()
 		result = append(result, dto)
 	}
 	response, err := json.Marshal(result)
@@ -91,12 +75,7 @@ func (s *Server) handleGetPersonById(w http.ResponseWriter, r *http.Request) {
 		s.HandleError(w, http.StatusInternalServerError, r.URL.Path, err)
 		return
 	}
-	resp := &api.PersonResponseDto{
-		ID:            int(p.ID),
-		Nombre:        p.Name,
-		Edad:          p.Age,
-		FechaCreacion: p.CreatedAt.String(),
-	}
+	resp := p.ToPersonResponseDto()
 	response, err := json.Marshal(resp)
 	if err != nil {
 		s.HandleError(w, http.StatusInternalServerError, r.URL.Path, err)
@@ -108,30 +87,37 @@ func (s *Server) handleGetPersonById(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleCreatePerson(w http.ResponseWriter, r *http.Request) {
-	var p api.PersonRequestDto
-	err := json.NewDecoder(r.Body).Decode(&p)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+	var req api.PersonRequestDto
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		s.HandleError(w, http.StatusBadRequest, r.URL.Path, err)
 		return
 	}
+
+	if req.FirstName == "" || req.LastName == "" || req.ImageURL == "" {
+		s.HandleError(w, http.StatusBadRequest, r.URL.Path, fmt.Errorf("first_name, last_name and image_url are required"))
+		return
+	}
+
+	fullName := req.FirstName + " " + req.LastName
 	person := &models.Person{
-		Name: p.Nombre,
-		Age:  int(p.Edad),
+		FirstName:    req.FirstName,
+		LastName:     req.LastName,
+		FullName:     fullName,
+		ImageURL:     req.ImageURL,
+		RegisteredAt: time.Now(),
+		IsDead:       false,
 	}
-	person, err = s.PeopleRepository.Save(person)
+
+	savedPerson, err := s.PeopleRepository.Save(person)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		s.HandleError(w, http.StatusInternalServerError, r.URL.Path, err)
 		return
 	}
-	pResponse := &api.PersonResponseDto{
-		ID:            int(person.ID),
-		Nombre:        person.Name,
-		Edad:          person.Age,
-		FechaCreacion: person.CreatedAt.String(),
-	}
-	result, err := json.Marshal(pResponse)
+
+	resp := savedPerson.ToPersonResponseDto()
+	result, err := json.Marshal(resp)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		s.HandleError(w, http.StatusInternalServerError, r.URL.Path, err)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -140,9 +126,8 @@ func (s *Server) handleCreatePerson(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleEditPerson(w http.ResponseWriter, r *http.Request) {
-	var p api.PersonRequestDto
-	err := json.NewDecoder(r.Body).Decode(&p)
-	if err != nil {
+	var req api.PersonRequestDto
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -150,6 +135,7 @@ func (s *Server) handleEditPerson(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(vars["id"], 10, 32)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
+		return
 	}
 	person, err := s.PeopleRepository.FindById(int(id))
 	if person == nil && err == nil {
@@ -160,20 +146,19 @@ func (s *Server) handleEditPerson(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	person.Name = p.Nombre
-	person.Age = int(p.Edad)
-	person, err = s.PeopleRepository.Save(person)
+	person.FirstName = req.FirstName
+	person.LastName = req.LastName
+	person.FullName = req.FirstName + " " + req.LastName
+	person.ImageURL = req.ImageURL
+
+	updated, err := s.PeopleRepository.Save(person)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	pResponse := &api.PersonResponseDto{
-		ID:            int(person.ID),
-		Nombre:        person.Name,
-		Edad:          person.Age,
-		FechaCreacion: person.CreatedAt.String(),
-	}
-	result, err := json.Marshal(pResponse)
+
+	resp := updated.ToPersonResponseDto()
+	result, err := json.Marshal(resp)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -188,6 +173,7 @@ func (s *Server) handleDeletePerson(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(vars["id"], 10, 32)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
+		return
 	}
 	person, err := s.PeopleRepository.FindById(int(id))
 	if person == nil && err == nil {

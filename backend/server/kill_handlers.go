@@ -94,8 +94,24 @@ func (s *Server) handleCreateKill(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			return err
 		}
-		return nil
+
+		// Marcar la persona como muerta
+		person.IsDead = true
+		if k.Description == "" {
+			person.CauseOfDeath = "Ataque al corazon"
+		} else {
+			person.CauseOfDeath = k.Description
+			now := time.Now()
+			person.CauseAt = &now
+		}
+
+		dt := time.Now()
+		person.DeathTime = &dt
+
+		_, err = s.PeopleRepository.Save(person)
+		return err
 	}
+
 	s.taskQueue.StartTask(int(person.ID), duration, killFunc, kill)
 	result, err := json.Marshal(&api.KillTaskResponseDto{
 		Person: person.ToPersonResponseDto(),

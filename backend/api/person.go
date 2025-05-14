@@ -1,16 +1,20 @@
 package api
 
 type PersonRequestDto struct {
-	Nombre string `json:"name"`
-	Edad   int32  `json:"age"`
+	FirstName string `json:"first_name" binding:"required"`
+	LastName  string `json:"last_name" binding:"required"`
+	ImageURL  string `json:"image_url" binding:"required"`
 }
 
 type PersonResponseDto struct {
-	ID            int    `json:"person_id"`
-	Nombre        string `json:"name"`
-	Edad          int    `json:"age"`
-	FechaCreacion string `json:"created_at"`
-	Estado        string `json:"status"`
+	ID           uint   `json:"id"`
+	FullName     string `json:"full_name"`
+	ImageURL     string `json:"image_url"`
+	CauseOfDeath string `json:"cause_of_death,omitempty"`
+	DeathDetails string `json:"death_details,omitempty"`
+	IsDead       bool   `json:"is_dead"`
+	DeathTime    string `json:"death_time,omitempty"`
+	CreatedAt    string `json:"created_at"`
 }
 
 type ErrorResponse struct {
