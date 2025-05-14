@@ -16,7 +16,7 @@ export function Renunciar() {
         Al renunciar a la Death Note, olvidarás por completo su existencia y todo lo relacionado con ella. Tu memoria será borrada.
       </p>
       <button className="renunciar-boton" onClick={volverInicio}>
-        ⬅ Volver al inicio
+        Volver al inicio
       </button>
     </div>
   );

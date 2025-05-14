@@ -15,7 +15,7 @@ function App() {
       <h1 className="deathnote-title">Death Note</h1>
       <Nav onRegistrarClick={handleRegistrarClick} />
 
-      {/* Mostramos el formulario debajo de la navbar */}
+      
       {mostrarFormulario && <RegisterDeath />}
     </div>
   );

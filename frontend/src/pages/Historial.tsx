@@ -49,7 +49,7 @@ export function Historial() {
         ))}
       </div>
 
-      {/* ✅ Botón de regreso */}
+      
       <button className="volver-btn" onClick={() => navigate("/pagina principal")}>
         ← Volver
       </button>
