@@ -28,10 +28,10 @@ func (p *Person) ToPersonResponseDto() *api.PersonResponseDto {
 		FullName:     p.FullName,
 		ImageURL:     p.ImageURL,
 		CauseOfDeath: p.CauseOfDeath,
-		DeathDetails: p.DeathDetails,
-		IsDead:       p.IsDead,
-		DeathTime:    formatTime(p.DeathTime),
-		CreatedAt:    p.CreatedAt.Format(time.RFC3339),
+
+		IsDead:    p.IsDead,
+		DeathTime: formatTime(p.DeathTime),
+		CreatedAt: p.CreatedAt.Format(time.RFC3339),
 	}
 }
 

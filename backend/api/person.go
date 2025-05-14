@@ -11,7 +11,6 @@ type PersonResponseDto struct {
 	FullName     string `json:"full_name"`
 	ImageURL     string `json:"image_url"`
 	CauseOfDeath string `json:"cause_of_death,omitempty"`
-	DeathDetails string `json:"death_details,omitempty"`
 	IsDead       bool   `json:"is_dead"`
 	DeathTime    string `json:"death_time,omitempty"`
 	CreatedAt    string `json:"created_at"`
