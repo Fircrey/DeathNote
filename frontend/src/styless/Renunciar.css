@@ -1,0 +1,35 @@
+.renunciar-container {
+  text-align: center;
+  padding: 100px 20px;
+  font-family: 'Ancient Medium', serif;
+  color: white;
+}
+
+.renunciar-titulo {
+  font-size: 3rem;
+  margin-bottom: 2rem;
+  text-shadow: 0 0 10px red;
+}
+
+.renunciar-texto {
+  font-size: 1.6rem;
+  max-width: 800px;
+  margin: 0 auto 3rem;
+  line-height: 2.4rem;
+}
+
+.renunciar-boton {
+  padding: 12px 24px;
+  font-size: 1.2rem;
+  font-family: 'Ancient Medium', serif;
+  background-color: transparent;
+  border: 2px solid white;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.renunciar-boton:hover {
+  background-color: white;
+  color: black;
+}
